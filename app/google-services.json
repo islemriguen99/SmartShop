@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "266967048454",
+    "project_id": "smartshop-a1ddb",
+    "storage_bucket": "smartshop-a1ddb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:266967048454:android:9403aadf27ead77470fe87",
+        "android_client_info": {
+          "package_name": "com.islemriguen.smartshop"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4o-5S1IakZ9BHgk4DDxF0X1ygMW13Z0U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

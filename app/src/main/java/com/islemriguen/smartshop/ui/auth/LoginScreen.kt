@@ -1,3 +1,4 @@
+// loginScreen.kt
 package com.islemriguen.smartshop.ui.auth
 
 import androidx.compose.foundation.background

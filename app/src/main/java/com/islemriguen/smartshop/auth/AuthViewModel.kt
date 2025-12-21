@@ -1,3 +1,4 @@
+//authViewModel.kt
 package com.islemriguen.smartshop.auth
 
 import androidx.lifecycle.ViewModel

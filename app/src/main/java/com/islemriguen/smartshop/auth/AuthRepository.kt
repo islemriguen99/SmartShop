@@ -1,3 +1,4 @@
+//authRepository.kt
 package com.islemriguen.smartshop.auth
 
 import com.google.firebase.auth.AuthResult

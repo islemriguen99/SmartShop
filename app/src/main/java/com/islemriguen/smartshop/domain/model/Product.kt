@@ -1,5 +1,6 @@
-// Product.kt
 package com.islemriguen.smartshop.domain.model
+
+import com.islemriguen.smartshop.data.local.entities.ProductEntity
 
 data class Product(
     val id: String,
@@ -7,30 +8,30 @@ data class Product(
     val quantity: Int,
     val price: Double,
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    val syncedWithCloud: Boolean = false // ✅ added
 ) {
     fun getTotalValue(): Double = price * quantity
 }
 
-// Extension function to convert between Entity and Domain Model
-fun com.islemriguen.smartshop.data.local.entities.ProductEntity.toDomain(): Product {
-    return Product(
-        id = id,
-        name = name,
-        quantity = quantity,
-        price = price,
-        createdAt = createdAt,
-        updatedAt = updatedAt
-    )
-}
+// Mapper from Entity to Domain
+fun ProductEntity.toDomain(): Product = Product(
+    id = id,
+    name = name,
+    quantity = quantity,
+    price = price,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    syncedWithCloud = syncedWithCloud // ✅ map this field
+)
 
-fun Product.toEntity(): com.islemriguen.smartshop.data.local.entities.ProductEntity {
-    return com.islemriguen.smartshop.data.local.entities.ProductEntity(
-        id = id,
-        name = name,
-        quantity = quantity,
-        price = price,
-        createdAt = createdAt,
-        updatedAt = updatedAt
-    )
-}
+// Mapper from Domain to Entity
+fun Product.toEntity(): ProductEntity = ProductEntity(
+    id = id,
+    name = name,
+    quantity = quantity,
+    price = price,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    syncedWithCloud = syncedWithCloud // ✅ map this field
+)

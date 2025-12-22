@@ -1,4 +1,4 @@
-// ProductViewModel.kt
+// FILE 5: ui/viewmodel/ProductViewModel.kt
 package com.islemriguen.smartshop.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
@@ -11,16 +11,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
 
-// UI State for Product List
 data class ProductListUiState(
     val products: List<Product> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val totalProducts: Int = 0,
-    val totalValue: Double = 0.0
+    val totalValue: Double = 0.0,
+    val searchQuery: String = ""
 )
 
-// UI State for Product Form (Add/Edit)
 data class ProductFormUiState(
     val id: String = UUID.randomUUID().toString(),
     val name: String = "",
@@ -32,9 +31,7 @@ data class ProductFormUiState(
     val isEditMode: Boolean = false
 )
 
-class ProductViewModel(
-    private val repository: ProductRepository
-) : ViewModel() {
+class ProductViewModel(private val repository: ProductRepository) : ViewModel() {
 
     private val _listState = MutableStateFlow(ProductListUiState())
     val listState: StateFlow<ProductListUiState> = _listState.asStateFlow()
@@ -47,7 +44,6 @@ class ProductViewModel(
         loadStatistics()
     }
 
-    // Load all products
     private fun loadProducts() {
         viewModelScope.launch {
             repository.getAllProducts().collect { products ->
@@ -56,7 +52,6 @@ class ProductViewModel(
         }
     }
 
-    // Load statistics
     private fun loadStatistics() {
         viewModelScope.launch {
             repository.getProductCount().collect { count ->
@@ -71,51 +66,51 @@ class ProductViewModel(
         }
     }
 
-    // Update form field - name
     fun updateFormName(name: String) {
         _formState.value = _formState.value.copy(name = name, error = null)
     }
 
-    // Update form field - quantity
     fun updateFormQuantity(quantity: String) {
         _formState.value = _formState.value.copy(quantity = quantity, error = null)
     }
 
-    // Update form field - price
     fun updateFormPrice(price: String) {
         _formState.value = _formState.value.copy(price = price, error = null)
     }
 
-    // Validate form data
+    fun updateSearchQuery(query: String) {
+        _listState.value = _listState.value.copy(searchQuery = query)
+    }
+
     private fun validateProductForm(): Boolean {
         val state = _formState.value
 
         when {
             state.name.isBlank() -> {
-                _formState.value = _formState.value.copy(error = "Product name is required")
+                _formState.value = _formState.value.copy(error = "Product name required")
                 return false
             }
             state.quantity.isBlank() -> {
-                _formState.value = _formState.value.copy(error = "Quantity is required")
+                _formState.value = _formState.value.copy(error = "Quantity required")
                 return false
             }
             state.price.isBlank() -> {
-                _formState.value = _formState.value.copy(error = "Price is required")
+                _formState.value = _formState.value.copy(error = "Price required")
                 return false
             }
             state.quantity.toIntOrNull() == null || state.quantity.toInt() < 0 -> {
-                _formState.value = _formState.value.copy(error = "Quantity must be a positive number")
+                _formState.value = _formState.value.copy(error = "Quantity must be positive")
                 return false
             }
             state.price.toDoubleOrNull() == null || state.price.toDouble() <= 0 -> {
-                _formState.value = _formState.value.copy(error = "Price must be greater than 0")
+                _formState.value = _formState.value.copy(error = "Price must be > 0")
                 return false
             }
         }
         return true
     }
 
-    // Add new product
+
     fun addProduct() {
         if (!validateProductForm()) return
 
@@ -131,10 +126,17 @@ class ProductViewModel(
 
             val result = repository.addProduct(product)
             result.onSuccess {
-                _formState.value = ProductFormUiState(
-                    id = UUID.randomUUID().toString(),
-                    isSuccess = true
+                // --- MODIFICATION ---
+                // Utilisez .copy() pour mettre à jour l'état au lieu de le remplacer
+                _formState.value = _formState.value.copy(
+                    isSuccess = true,
+                    isLoading = false, // Explicitement arrêter le chargement
+                    name = "", // Réinitialiser les champs
+                    quantity = "",
+                    price = "",
+                    id = UUID.randomUUID().toString() // Préparer un nouvel ID pour le prochain ajout
                 )
+                // --- FIN DE LA MODIFICATION ---
             }
             result.onFailure { error ->
                 _formState.value = _formState.value.copy(
@@ -145,7 +147,6 @@ class ProductViewModel(
         }
     }
 
-    // Update existing product
     fun updateProduct() {
         if (!validateProductForm()) return
 
@@ -169,13 +170,12 @@ class ProductViewModel(
             result.onFailure { error ->
                 _formState.value = _formState.value.copy(
                     isLoading = false,
-                    error = error.message ?: "Failed to update product"
+                    error = error.message ?: "Failed to update"
                 )
             }
         }
     }
 
-    // Delete product
     fun deleteProduct(productId: String) {
         viewModelScope.launch {
             _listState.value = _listState.value.copy(isLoading = true)
@@ -184,13 +184,12 @@ class ProductViewModel(
             result.onFailure { error ->
                 _listState.value = _listState.value.copy(
                     isLoading = false,
-                    error = error.message ?: "Failed to delete product"
+                    error = error.message ?: "Failed to delete"
                 )
             }
         }
     }
 
-    // Load product for editing
     fun loadProductForEdit(productId: String) {
         viewModelScope.launch {
             val product = repository.getProductById(productId)
@@ -206,17 +205,7 @@ class ProductViewModel(
         }
     }
 
-    // Reset form
     fun resetForm() {
-        _formState.value = ProductFormUiState(
-            id = UUID.randomUUID().toString()
-        )
-    }
-
-    // Sync unsynced products
-    fun syncWithCloud() {
-        viewModelScope.launch {
-            repository.syncUnsyncedProducts()
-        }
+        _formState.value = ProductFormUiState(id = UUID.randomUUID().toString())
     }
 }

@@ -1,11 +1,13 @@
-//authViewModel.kt
+// FILE 4: auth/AuthViewModel.kt
 package com.islemriguen.smartshop.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 data class LoginUiState(
     val email: String = "",
@@ -16,39 +18,38 @@ data class LoginUiState(
 )
 
 class AuthViewModel : ViewModel() {
-    private val authRepository = AuthRepository()
+    private val firebaseAuth = FirebaseAuth.getInstance()
 
     private val _loginState = MutableStateFlow(LoginUiState())
     val loginState: StateFlow<LoginUiState> = _loginState
 
     fun updateEmail(email: String) {
-        _loginState.value = _loginState.value.copy(email = email)
+        _loginState.value = _loginState.value.copy(email = email, error = null)
     }
 
     fun updatePassword(password: String) {
-        _loginState.value = _loginState.value.copy(password = password)
+        _loginState.value = _loginState.value.copy(password = password, error = null)
     }
 
     fun login() {
         viewModelScope.launch {
             _loginState.value = _loginState.value.copy(isLoading = true, error = null)
-            val result = authRepository.login(
-                _loginState.value.email,
-                _loginState.value.password
-            )
-            result.onSuccess {
-                _loginState.value = _loginState.value.copy(isLoading = false, isLoginSuccess = true)
-            }
-            result.onFailure { exception ->
+            try {
+                firebaseAuth.signInWithEmailAndPassword(
+                    _loginState.value.email,
+                    _loginState.value.password
+                ).await()
+
                 _loginState.value = _loginState.value.copy(
                     isLoading = false,
-                    error = exception.message ?: "Login failed"
+                    isLoginSuccess = true
+                )
+            } catch (e: Exception) {
+                _loginState.value = _loginState.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "Login failed"
                 )
             }
         }
-    }
-
-    fun clearError() {
-        _loginState.value = _loginState.value.copy(error = null)
     }
 }

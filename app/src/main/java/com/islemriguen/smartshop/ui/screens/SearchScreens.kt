@@ -4,57 +4,54 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.islemriguen.smartshop.ui.components.ProductListCard
+import com.islemriguen.smartshop.ui.components.SearchResultCard
 import com.islemriguen.smartshop.ui.viewmodel.ProductViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductListScreen(
+fun SearchScreen(
     viewModel: ProductViewModel,
-    onAddProductClick: () -> Unit,
-    onEditProductClick: (String) -> Unit,
     onBackClick: () -> Unit
 ) {
     val state by viewModel.listState.collectAsState()
+    val filtered = state.products.filter {
+        it.name.contains(state.searchQuery, ignoreCase = true)
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Products", fontWeight = FontWeight.Bold) },
+                title = { Text("Search") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = onAddProductClick) {
-                Icon(Icons.Filled.Add, contentDescription = "Add")
-            }
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-        ) {
-            items(state.products) { product ->
-                ProductListCard(
-                    product = product,
-                    onEdit = { onEditProductClick(product.id) },
-                    onDelete = { viewModel.deleteProduct(product.id) }
-                )
+        Column(Modifier.padding(padding)) {
+            OutlinedTextField(
+                value = state.searchQuery,
+                onValueChange = viewModel::updateSearchQuery,
+                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = "Search") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            )
+
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(filtered) { product ->
+                    SearchResultCard(product)
+                }
             }
         }
     }

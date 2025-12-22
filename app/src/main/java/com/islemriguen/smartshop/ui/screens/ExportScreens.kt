@@ -1,17 +1,13 @@
-// ============================================================
-// ui/screens/ExportScreen.kt (COMPLETE WITH SHARE)
-// ============================================================
 package com.islemriguen.smartshop.ui.screens
 
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.animation.animateContentSize
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,32 +19,28 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.islemriguen.smartshop.domain.model.Product
 import com.islemriguen.smartshop.ui.viewmodel.ExportViewModel
+import com.islemriguen.smartshop.ui.viewmodel.ProductViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExportScreen(
-    products: List<Product>,
+    productViewModel: ProductViewModel,
     onBackClick: () -> Unit = {},
-    viewModel: ExportViewModel = viewModel()
+    exportViewModel: ExportViewModel = viewModel()
 ) {
+    val products by productViewModel.listState.collectAsState().run { derivedStateOf { this.value.products } }
+    val exportState by exportViewModel.exportState.collectAsState()
     val context = LocalContext.current
-    val exportState by viewModel.exportState.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text("Export & Share", fontWeight = FontWeight.Bold)
-                },
+                title = { Text("Export & Share", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                }
             )
         }
     ) { paddingValues ->
@@ -62,20 +54,14 @@ fun ExportScreen(
         ) {
             // Header
             item {
-                Text(
-                    "Choose Export Format",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("Choose Export Format", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    "Select a format and choose to export or share directly",
+                Text("Select a format and choose to export or share directly",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
-            // CSV Export
+            // CSV
             item {
                 ExportOptionCardWithShare(
                     title = "CSV Format",
@@ -83,16 +69,12 @@ fun ExportScreen(
                     icon = Icons.Filled.Download,
                     shareIcon = Icons.Filled.Share,
                     isLoading = exportState.isExporting,
-                    onExport = {
-                        viewModel.exportToCSV(context, products, share = false)
-                    },
-                    onShare = {
-                        viewModel.exportToCSV(context, products, share = true)
-                    }
+                    onExport = { exportViewModel.exportToCSV(context, products, share = false) },
+                    onShare = { exportViewModel.exportToCSV(context, products, share = true) }
                 )
             }
 
-            // Excel Export
+            // Excel
             item {
                 ExportOptionCardWithShare(
                     title = "Excel Format",
@@ -100,16 +82,12 @@ fun ExportScreen(
                     icon = Icons.Filled.Download,
                     shareIcon = Icons.Filled.Share,
                     isLoading = exportState.isExporting,
-                    onExport = {
-                        viewModel.exportToExcel(context, products, share = false)
-                    },
-                    onShare = {
-                        viewModel.exportToExcel(context, products, share = true)
-                    }
+                    onExport = { exportViewModel.exportToExcel(context, products, share = false) },
+                    onShare = { exportViewModel.exportToExcel(context, products, share = true) }
                 )
             }
 
-            // Text Export
+            // Text
             item {
                 ExportOptionCardWithShare(
                     title = "Text Report",
@@ -117,16 +95,12 @@ fun ExportScreen(
                     icon = Icons.Filled.Download,
                     shareIcon = Icons.Filled.Share,
                     isLoading = exportState.isExporting,
-                    onExport = {
-                        viewModel.exportToText(context, products, share = false)
-                    },
-                    onShare = {
-                        viewModel.exportToText(context, products, share = true)
-                    }
+                    onExport = { exportViewModel.exportToText(context, products, share = false) },
+                    onShare = { exportViewModel.exportToText(context, products, share = true) }
                 )
             }
 
-            // JSON Export
+            // JSON
             item {
                 ExportOptionCardWithShare(
                     title = "JSON Format",
@@ -134,163 +108,49 @@ fun ExportScreen(
                     icon = Icons.Filled.Download,
                     shareIcon = Icons.Filled.Share,
                     isLoading = exportState.isExporting,
-                    onExport = {
-                        viewModel.exportToJSON(context, products, share = false)
-                    },
-                    onShare = {
-                        viewModel.exportToJSON(context, products, share = true)
-                    }
+                    onExport = { exportViewModel.exportToJSON(context, products, share = false) },
+                    onShare = { exportViewModel.exportToJSON(context, products, share = true) }
                 )
             }
 
-            // Success Message
+            // Export success/error messages
             if (exportState.successMessage != null) {
-                item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .animateContentSize(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Icon(
-                                Icons.Filled.Download,
-                                contentDescription = "Success",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    "✓ Export Successful",
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    exportState.successMessage ?: "",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            }
-                        }
-                    }
-                }
+                item { ExportMessageCard(message = exportState.successMessage!!, isError = false) }
             }
-
-            // Error Message
             if (exportState.exportError != null) {
-                item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .animateContentSize(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Icon(
-                                Icons.Filled.ArrowBack,
-                                contentDescription = "Error",
-                                tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    "✗ Export Failed",
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                                Text(
-                                    exportState.exportError ?: "",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onErrorContainer
-                                )
-                            }
-                        }
-                    }
-                }
+                item { ExportMessageCard(message = exportState.exportError!!, isError = true) }
             }
 
-            // Summary Info
+            // Summary
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    ),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Text(
-                            "Export Summary",
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleSmall
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Export Summary", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Column {
-                                Text(
-                                    "Products to Export",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    "${products.size} items",
-                                    fontWeight = FontWeight.Bold
-                                )
+                                Text("Products to Export", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("${products.size} items", fontWeight = FontWeight.Bold)
                             }
                             Column {
-                                Text(
-                                    "Total Value",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    "$${String.format("%.2f", products.sumOf { it.getTotalValue() })}",
+                                Text("Total Value", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("$${String.format("%.2f", products.sumOf { it.getTotalValue() })}",
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                                    color = MaterialTheme.colorScheme.primary)
                             }
                         }
                     }
                 }
             }
 
-            // Spacing
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+            item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
 }
 
-/**
- * Custom composable for export options with both Export and Share buttons
- */
 @Composable
 fun ExportOptionCardWithShare(
     title: String,
@@ -308,91 +168,55 @@ fun ExportOptionCardWithShare(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Title and Description
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Column {
-                Text(
-                    title,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
-            // Buttons Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Export Button (saves to cache directory)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(
-                    onClick = {
-                        onExport()
-                    },
+                    onClick = onExport,
                     enabled = !isLoading,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    } else {
-                        Icon(
-                            icon,
-                            contentDescription = "Export",
-                            modifier = Modifier.size(20.dp)
-                        )
+                    if (isLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                    else {
+                        Icon(icon, contentDescription = "Export", modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Export", fontWeight = FontWeight.SemiBold)
                     }
                 }
 
-                // Share Button (export + opens share dialog)
                 Button(
-                    onClick = {
-                        onShare()
-                    },
+                    onClick = onShare,
                     enabled = !isLoading,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
-                    )
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                 ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.onSecondary
-                        )
-                    } else {
-                        Icon(
-                            shareIcon,
-                            contentDescription = "Share",
-                            modifier = Modifier.size(20.dp)
-                        )
+                    if (isLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onSecondary)
+                    else {
+                        Icon(shareIcon, contentDescription = "Share", modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Share", fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun ExportMessageCard(message: String, isError: Boolean) {
+    Card(
+        modifier = Modifier.fillMaxWidth().animateContentSize(),
+        colors = CardDefaults.cardColors(containerColor = if (isError) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Icon(if (isError) Icons.Filled.Close else Icons.Filled.Check, contentDescription = null, tint = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
+            Text(message, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }

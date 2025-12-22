@@ -1,6 +1,4 @@
-// ============================================================
-// ISSUE 4: Fix Navigation.kt - Proper Integration
-// ============================================================
+// FILE 1: navigation/Navigation.kt
 package com.islemriguen.smartshop.navigation
 
 import androidx.compose.runtime.*
@@ -34,7 +32,6 @@ fun NavigationGraph(database: SmartShopDatabase) {
         composable("home") {
             HomeScreen(
                 database = database,
-                navController = navController,
                 onLogout = {
                     isLoggedIn = false
                     navController.navigate("login") {

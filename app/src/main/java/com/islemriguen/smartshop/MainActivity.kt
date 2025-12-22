@@ -1,4 +1,4 @@
-// MainActivity.kt
+// FILE 1: MainActivity.kt
 package com.islemriguen.smartshop
 
 import android.os.Bundle
@@ -15,8 +15,6 @@ import com.islemriguen.smartshop.ui.theme.SmartShopTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Initialize database
         val database = SmartShopDatabase.getDatabase(this)
 
         setContent {
